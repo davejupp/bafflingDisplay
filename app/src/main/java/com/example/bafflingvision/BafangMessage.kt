@@ -2,12 +2,6 @@ package com.example.bafflingvision
 
 import com.example.bafflingvision.usbDataMonitor.toHexString
 
-data class FWVersion(val major: Byte, val minor: Byte, val patch: Byte) {
-    override fun toString(): String {
-        return "Version ${major}.${minor}.${patch}"
-    }
-}
-
 /**
  *     BafflingDisplay android app
  *
@@ -27,22 +21,61 @@ data class FWVersion(val major: Byte, val minor: Byte, val patch: Byte) {
  *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  */
-enum class MessageType(val code: Byte) {
-    READ(0x1),
-    WRITE(0x2),
-    UNKNOWN(0xf)
+abstract class BaseUartMessage {
+    abstract fun getBytes(): ByteArray
+
+    override fun toString(): String {
+        return "Bafang message: ${getBytes().toHexString()}"
+    }
 }
 
-abstract class ReadMessage(code: Byte) : BafangMessage(MessageType.READ, code)
+abstract class BaseUartReceiveMessage();
+abstract class BaseUartSendMessage();
 
-object ReadFirmwareVersionMessage: ReadMessage(OPCODE_READ_FW_VERSION) {
+abstract class BafangReadMessage(code: Byte) : BafangMessage(MessageType.BAFANG_READ, code)
+abstract class BafangWriteMessage(val code: Byte) : BafangIMessage {
+    override fun getType(): MessageType {
+        return MessageType.BAFANG_WRITE
+    }
+
+    override fun getOpcode(): Byte {
+        return code
+    }
+}
+
+class BafangReadBasicDataMessage(val code: Byte): BafangReadMessage(code) {
+    override fun getBytes(): ByteArray {
+        return byteArrayOf(MessageType.BAFANG_READ.code, code)
+    }
+}
+
+object BafangReadFirmwareVersionMessage: BafangReadMessage(OSFW_READ) {
     override fun getBytes(): ByteArray {
         return byteArrayOf(0x1, 0x1, 0x2)
     }
 }
-object ReadBasicDataVersionMessage: ReadMessage(READ_CONFIG_OTHER) {
+
+object BafangReadEventLogStatusMessage: BafangReadMessage(OSFW_READ) {
     override fun getBytes(): ByteArray {
-        return byteArrayOf(0x11, BASIC_DATA, 0x04, 0xB0.toByte(), 0x05)
+        return byteArrayOf(MessageType.BBSFW_READ.code, OPCODE_READ_EVTLOG_ENABLE, 0x3)
+    }
+}
+
+object BafangEnableEventLogStatusMessage: BafangWriteMessage(OSFW_READ) {
+    override fun getBytes(): ByteArray {
+        return byteArrayOf(MessageType.BAFANG_WRITE.code, 0x2, 0x3)
+    }
+}
+
+object BafangMessage08Bafang: BafangReadMessage(0x08)
+object BafangMessage0ABafang: BafangReadMessage(0x0a)
+object BafangMessage11Bafang: BafangReadMessage(0x11)
+object BafangMessage20Bafang: BafangReadMessage(0x20)
+object BafangMessage22Bafang: BafangReadMessage(0x22)
+
+object BafangMessage25Bafang: BafangReadMessage(MessageType.BAFANG_READ.code) {
+    override fun getBytes(): ByteArray {
+        return byteArrayOf(MessageType.BAFANG_READ.code, 0x0a)
     }
 }
 
@@ -50,7 +83,7 @@ abstract class ReceiveMessage(messageType: MessageType, code: Byte, val data: By
     abstract fun getSize():  Int
 }
 
-class GetFirmwareVersionResponse(data: ByteArray): ReceiveMessage(MessageType.READ, OPCODE_READ_FW_VERSION, data) {
+class GetFirmwareVersionResponse(data: ByteArray): ReceiveMessage(MessageType.BAFANG_READ, OSFW_READ, data) {
     companion object {
         const val MESSAGE_SIZE = 8
     }
@@ -66,7 +99,7 @@ class GetFirmwareVersionResponse(data: ByteArray): ReceiveMessage(MessageType.RE
     }
 }
 
-object NoOpBafangMessage: BafangMessage(MessageType.READ, 0x00)
+object NoOpBafangMessage: BafangMessage(MessageType.BAFANG_READ, 0x00)
 class ErrorProcessingMessage(val message: Error): BafangMessage(MessageType.UNKNOWN, 0xf)
 
 abstract class BafangMessage(private val _type: MessageType, private val _opcode: Byte): BafangIMessage {
@@ -79,12 +112,9 @@ abstract class BafangMessage(private val _type: MessageType, private val _opcode
          * Daniel Nilsson https://github.com/danielnilsson9/bbs-fw/wiki/Bafang-Display-Protocol
          */
         // Note that kotlin needs these silly assignments because bytes are signed on the JVM
-        val OPCODE_READ_FW_VERSION: Byte = 0x01;
+        val OSFW_READ: Byte = 0x01;
         val OPCODE_READ_EVTLOG_ENABLE: Byte = 0x02;
         val OPCODE_READ_CONFIG: Byte = 0x03;
-
-        val READ_CONFIG_OTHER = 0x11.toByte()
-        val BASIC_DATA = 0x51.toByte()
 
         val OPCODE_WRITE_EVTLOG_ENABLE: Byte = (0xf0).toByte();
         val OPCODE_WRITE_CONFIG: Byte = (0xf1).toByte();
@@ -98,8 +128,11 @@ abstract class BafangMessage(private val _type: MessageType, private val _opcode
 
     override fun getBytes(): ByteArray {
         val message = byteArrayOf(getType().code, getOpcode());
-        val checkSum = computeChecksum(message)
-        return message + checkSum;
+        if (getType() == MessageType.BAFANG_READ) {
+            //val checkSum = computeChecksum(message)
+            return message
+        }
+        return message
     }
 
     fun computeChecksum(buffer: ByteArray): Byte {

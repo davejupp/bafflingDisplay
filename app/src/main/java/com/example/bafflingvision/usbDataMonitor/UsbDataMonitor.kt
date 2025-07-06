@@ -7,12 +7,12 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
 import com.example.bafflingvision.BafangMessage
-import com.example.bafflingvision.BafangMessage.Companion.OPCODE_READ_FW_VERSION
+import com.example.bafflingvision.BafangMessage.Companion.OSFW_READ
 import com.example.bafflingvision.ErrorProcessingMessage
 import com.example.bafflingvision.GetFirmwareVersionResponse
 import com.example.bafflingvision.MessageType
 import com.example.bafflingvision.NoOpBafangMessage
-import com.example.bafflingvision.ReadMessage
+import com.example.bafflingvision.BafangReadMessage
 import com.example.bafflingvision.UsbSerialService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,10 +40,6 @@ import java.io.IOException
 
 class UsbDataMonitor(private val context: Context): UsbMonitor
 {
-//    fun finalize() {
-//        // stop()
-//    }
-//
     private inner class USBListener: UsbSerialService.UsbSerialListener {
         override fun onUsbDeviceAttached(deviceName: String) {
             _usbStatus.value = UsbStatus.Connected(deviceName)
@@ -60,18 +56,20 @@ class UsbDataMonitor(private val context: Context): UsbMonitor
             inputBuffer = inputBuffer + data
             var outputConsumed = 0
             // collect more bytes if we need
-            if (inputBuffer.size < 2) {
+            Log.e("UsbDataMonitor", "Received ${data.toHexString()}")
+            outputConsumed = if (inputBuffer.size < 2) {
                 return
-            } else if (inputBuffer[0] == MessageType.READ.code) {
-                outputConsumed = processReadMessageReceived(inputBuffer)
-            } else if (inputBuffer[0] == MessageType.WRITE.code) {
-                outputConsumed = processWriteMessageReceived(inputBuffer)
+            } else if (inputBuffer[0] == MessageType.BBSFW_READ.code) {
+                processReadMessageReceived(inputBuffer)
+            } else if (inputBuffer[0] == MessageType.BAFANG_READ.code) {
+                processBafangReadMessageReceived(inputBuffer)
+            } else if (inputBuffer[0] == MessageType.BBSFW_WRITE.code) {
+                processWriteMessageReceived(inputBuffer)
             } else {
-                // swallow a byte and try again?
-                outputConsumed = 1
+               0 // we have no idea what this byte is so ignore it
             }
             if (outputConsumed > 0) {
-//                inputBuffer = inputBuffer.drop(outputConsumed).toByteArray()
+                inputBuffer = inputBuffer.drop(outputConsumed).toByteArray()
             }
         }
 
@@ -180,13 +178,13 @@ class UsbDataMonitor(private val context: Context): UsbMonitor
         return usbSerialService.sendData(data)
     }
 
-    override fun sendReadRequest(message: ReadMessage): Boolean {
+    override fun sendReadRequest(message: BafangReadMessage): Boolean {
         _sentMessage.value = message
         return sendData(message.getBytes())
     }
 
     private fun processReadMessageReceived(bytes: ByteArray): Int {
-        if(bytes[1] == OPCODE_READ_FW_VERSION) {
+        if(bytes[1] == OSFW_READ) {
             val messageSize = GetFirmwareVersionResponse.Companion.MESSAGE_SIZE
             if (messageSize <= bytes.size) {
                 val receiveMessage = GetFirmwareVersionResponse(bytes)
@@ -197,6 +195,11 @@ class UsbDataMonitor(private val context: Context): UsbMonitor
         return 0
     }
 
+    private fun processBafangReadMessageReceived(bytes: ByteArray): Int {
+       print("Received ${bytes.toHexString()}")
+        return 0;
+    }
+
     private fun processWriteMessageReceived(bytes: ByteArray): Int {
         return 0
     }
@@ -204,4 +207,4 @@ class UsbDataMonitor(private val context: Context): UsbMonitor
 
 // Helper extension function for logging byte arrays
 fun ByteArray.toHexString(): String =
-    joinToString(separator = " ") { eachByte -> "%02x".format(eachByte) }
+    joinToString(separator = " ") { eachByte -> "0x%01X".format(eachByte) }

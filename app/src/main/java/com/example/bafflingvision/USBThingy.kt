@@ -47,7 +47,13 @@ fun UsbSerialScreen(
     onConnectClick: () -> Unit,
     onDisconnectClick: () -> Unit,
     onSendFirmwareVersionRequest: () -> Unit,
-    onSendBasicDataRequest: () -> Unit
+    onSendSomeRequest: () -> Unit,
+    onReadBasicDataRequest08: () -> Unit,
+    onReadBasicDataRequest11: () -> Unit,
+    onReadBasicDataRequest24: () -> Unit,
+    onReadBasicDataRequest0a: () -> Unit,
+    onReadBasicDataRequest20: () -> Unit,
+    onReadBasicDataRequest22: () -> Unit
 ) {
     val statusText = when (usbStatus) {
         is UsbStatus.Connected -> "Connected to: ${usbStatus.deviceName}"
@@ -94,10 +100,66 @@ fun UsbSerialScreen(
 
             // Button for specific command
             Button(
-                onClick = onSendBasicDataRequest,
+                onClick = onSendSomeRequest,
                 enabled = usbStatus is UsbStatus.Connected
             ) {
-                Text("Send Basic Data request")
+                Text("Request something or other")
+            }
+
+            // Button for specific command
+            Button(
+                onClick = onReadBasicDataRequest08,
+                enabled = usbStatus is UsbStatus.Connected
+            ) {
+                Text("Read 08")
+            }
+
+            // Button for specific command
+            Button(
+                onClick = onReadBasicDataRequest0a,
+                enabled = usbStatus is UsbStatus.Connected
+            ) {
+                Text("Read 0a")
+            }
+
+            // Button for specific command
+            Button(
+                onClick = onReadBasicDataRequest11,
+                enabled = usbStatus is UsbStatus.Connected
+            ) {
+                Text("Read 11")
+            }
+
+            // Button for specific command
+            Button(
+                onClick = onReadBasicDataRequest20,
+                enabled = usbStatus is UsbStatus.Connected
+            ) {
+                Text("Read 20")
+            }
+
+            // Button for specific command
+            Button(
+                onClick = onReadBasicDataRequest22,
+                enabled = usbStatus is UsbStatus.Connected
+            ) {
+                Text("Read 22")
+            }
+
+            // Button for specific command
+            Button(
+                onClick = onReadBasicDataRequest24,
+                enabled = usbStatus is UsbStatus.Connected
+            ) {
+                Text("Read 24")
+            }
+
+            // Button for specific command
+            Button(
+                onClick = onReadBasicDataRequest08,
+                enabled = usbStatus is UsbStatus.Connected
+            ) {
+                Text("ReadBasic Data request")
             }
 
             for (sentDataItem in sentData) {

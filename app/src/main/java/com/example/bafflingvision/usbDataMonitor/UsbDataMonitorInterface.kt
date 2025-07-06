@@ -1,7 +1,7 @@
 package com.example.bafflingvision.usbDataMonitor
 
 import com.example.bafflingvision.BafangMessage
-import com.example.bafflingvision.ReadMessage
+import com.example.bafflingvision.BafangReadMessage
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -71,10 +71,10 @@ interface UsbMonitor {
 
     /**
      * Sends a read request message to the connected device.
-     * @param message The [com.example.bafflingvision.ReadMessage] to send.
+     * @param message The [com.example.bafflingvision.BafangReadMessage] to send.
      * @return true if the data was successfully passed to the service for sending, false otherwise.
      *         Note: Successful return here does not guarantee the device received or processed it.
      *         Observe [sentDataLog] and [receivedMessage] for more details.
      */
-    fun sendReadRequest(message: ReadMessage): Boolean
+    fun sendReadRequest(message: BafangReadMessage): Boolean
 }

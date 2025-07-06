@@ -143,11 +143,30 @@ class MainNavigationActivity : ComponentActivity() {
                                 onConnectClick = { usbDataMonitor.findAndConnectDevice() },
                                 onDisconnectClick = { usbDataMonitor.disconnectDevice() },
                                 onSendFirmwareVersionRequest = {
-                                    usbDataMonitor.sendReadRequest(ReadFirmwareVersionMessage) // ReadFirmwareVersionMessage)
+                                    usbDataMonitor.sendReadRequest(BafangReadFirmwareVersionMessage) // ReadFirmwareVersionMessage)
                                 },
-                                onSendBasicDataRequest = {
-                                    usbDataMonitor.sendReadRequest(ReadBasicDataVersionMessage)
-                                }
+                                onSendSomeRequest = {
+                                    usbDataMonitor.sendReadRequest(BafangReadSomethingVersionMessage) // ReadFirmwareVersionMessage)
+                                },
+                                onReadBasicDataRequest08 = {
+                                    usbDataMonitor.sendReadRequest(BafangMessage08Bafang)
+                                },
+                                onReadBasicDataRequest11 = {
+                                    usbDataMonitor.sendReadRequest(BafangMessage11Bafang)
+                                },
+                                onReadBasicDataRequest24 = {
+                                    usbDataMonitor.sendReadRequest(BafangMessage25Bafang)
+                                },
+                                onReadBasicDataRequest0a = {
+                                    usbDataMonitor.sendReadRequest(BafangMessage0ABafang)
+                                },
+                                onReadBasicDataRequest20 = {
+                                    usbDataMonitor.sendReadRequest(BafangMessage20Bafang)
+                                },
+                                onReadBasicDataRequest22 = {
+                                    usbDataMonitor.sendReadRequest(BafangMessage22Bafang)
+                                },
+
                             )
                         }
 
