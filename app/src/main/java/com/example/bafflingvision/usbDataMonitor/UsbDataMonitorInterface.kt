@@ -1,10 +1,29 @@
-package com.example.bafflingvision
+package com.example.bafflingvision.usbDataMonitor
 
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.example.bafflingvision.BafangMessage
+import com.example.bafflingvision.ReadMessage
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
-// Sealed class to represent USB status more explicitly (can be kept from previous version)
+/**
+ *     BafflingDisplay android app
+ *
+ *     Copyright (C) 2025 Dave.J
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 sealed class UsbStatus {
     data object ServiceBound : UsbStatus()
     data object ServiceUnbound : UsbStatus()
@@ -13,6 +32,9 @@ sealed class UsbStatus {
     data class Error(val message: String) : UsbStatus()
 }
 
+/**
+ * Interface representing a class that translates between uart serial data and bafang messages
+ */
 interface UsbMonitor {
     /**
      * A flow emitting the current status of the USB connection.
@@ -49,22 +71,10 @@ interface UsbMonitor {
 
     /**
      * Sends a read request message to the connected device.
-     * @param message The [ReadMessage] to send.
+     * @param message The [com.example.bafflingvision.ReadMessage] to send.
      * @return true if the data was successfully passed to the service for sending, false otherwise.
      *         Note: Successful return here does not guarantee the device received or processed it.
      *         Observe [sentDataLog] and [receivedMessage] for more details.
      */
     fun sendReadRequest(message: ReadMessage): Boolean
-
-    /**
-     * Starts the monitoring process, which includes binding to the UsbSerialService.
-     * This must be called before other operations like [findAndConnectDevice].
-     */
-    fun start()
-
-    /**
-     * Stops the monitoring process, which includes unbinding from the UsbSerialService.
-     * This should be called when the monitor is no longer needed to release resources.
-     */
-    fun stop()
 }

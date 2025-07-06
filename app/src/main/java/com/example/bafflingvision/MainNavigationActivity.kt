@@ -17,7 +17,28 @@ import androidx.navigation3.ui.NavDisplay
 import com.example.bafflingvision.AppScreens.Home
 import com.example.bafflingvision.AppScreens.None
 import com.example.bafflingvision.ui.theme.BafflingVisionTheme
+import com.example.bafflingvision.usbDataMonitor.UsbDataMonitor
+import com.example.bafflingvision.usbDataMonitor.UsbStatus
 import kotlinx.coroutines.launch
+/**
+ *     BafflingDisplay android app
+ *
+ *     Copyright (C) 2025 Dave.J
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
 class MainNavigationActivity : ComponentActivity() {
 
@@ -122,7 +143,10 @@ class MainNavigationActivity : ComponentActivity() {
                                 onConnectClick = { usbDataMonitor.findAndConnectDevice() },
                                 onDisconnectClick = { usbDataMonitor.disconnectDevice() },
                                 onSendFirmwareVersionRequest = {
-                                    usbDataMonitor.sendReadRequest(ReadFirmwareVersionMessage)
+                                    usbDataMonitor.sendReadRequest(ReadFirmwareVersionMessage) // ReadFirmwareVersionMessage)
+                                },
+                                onSendBasicDataRequest = {
+                                    usbDataMonitor.sendReadRequest(ReadBasicDataVersionMessage)
                                 }
                             )
                         }

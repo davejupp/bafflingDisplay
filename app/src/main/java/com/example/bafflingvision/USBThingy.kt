@@ -15,12 +15,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.bafflingvision.usbDataMonitor.UsbDataMonitor
+import com.example.bafflingvision.usbDataMonitor.UsbStatus
 
-class FWVersion(val major: Byte, val minor: Byte, val patch: Byte) {
-    override fun toString(): String {
-        return "Version ${major}.${minor}.${patch}"
-    }
-}
+/**
+ *     BafflingDisplay android app
+ *
+ *     Copyright (C) 2025 Dave.J
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
 // Update UsbSerialScreen Composable to handle the new UsbStatus type
 @Composable
@@ -30,7 +46,8 @@ fun UsbSerialScreen(
     messageReceived: List<BafangMessage>,
     onConnectClick: () -> Unit,
     onDisconnectClick: () -> Unit,
-    onSendFirmwareVersionRequest: () -> Unit
+    onSendFirmwareVersionRequest: () -> Unit,
+    onSendBasicDataRequest: () -> Unit
 ) {
     val statusText = when (usbStatus) {
         is UsbStatus.Connected -> "Connected to: ${usbStatus.deviceName}"
@@ -38,6 +55,7 @@ fun UsbSerialScreen(
         is UsbStatus.Error -> "Error: ${usbStatus.message}"
         UsbStatus.ServiceBound -> "Service Bound (Ready to connect)"
         UsbStatus.ServiceUnbound -> "Service Unbound"
+        UsbDataMonitor -> "Erm I have no idea"
     }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -72,6 +90,14 @@ fun UsbSerialScreen(
                 enabled = usbStatus is UsbStatus.Connected
             ) {
                 Text("Request Firmware Version")
+            }
+
+            // Button for specific command
+            Button(
+                onClick = onSendBasicDataRequest,
+                enabled = usbStatus is UsbStatus.Connected
+            ) {
+                Text("Send Basic Data request")
             }
 
             for (sentDataItem in sentData) {

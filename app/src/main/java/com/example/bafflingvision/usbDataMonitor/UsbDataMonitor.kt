@@ -1,4 +1,4 @@
-package com.example.bafflingvision
+package com.example.bafflingvision.usbDataMonitor
 
 import android.content.ComponentName
 import android.content.Context
@@ -6,14 +6,94 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import com.example.bafflingvision.BafangMessage
 import com.example.bafflingvision.BafangMessage.Companion.OPCODE_READ_FW_VERSION
+import com.example.bafflingvision.ErrorProcessingMessage
+import com.example.bafflingvision.GetFirmwareVersionResponse
+import com.example.bafflingvision.MessageType
+import com.example.bafflingvision.NoOpBafangMessage
+import com.example.bafflingvision.ReadMessage
+import com.example.bafflingvision.UsbSerialService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.IOException
+/**
+ *     BafflingDisplay android app
+ *
+ *     Copyright (C) 2025 Dave.J
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 
-class UsbDataMonitor(private val context: Context): UsbMonitor, UsbSerialService.UsbSerialListener
+class UsbDataMonitor(private val context: Context): UsbMonitor
 {
+//    fun finalize() {
+//        // stop()
+//    }
+//
+    private inner class USBListener: UsbSerialService.UsbSerialListener {
+        override fun onUsbDeviceAttached(deviceName: String) {
+            _usbStatus.value = UsbStatus.Connected(deviceName)
+            Log.i(TAG, "USB Device Attached: $deviceName")
+        }
+
+        override fun onUsbDeviceDetached() {
+            _usbStatus.value = UsbStatus.Disconnected
+            Log.i(TAG, "USB Device Detached")
+        }
+
+        override fun onUsbDataReceived(data: ByteArray) {
+            // just append the data. work out what to do afterwards. we literally don't know how long the message is until we get these bytes
+            inputBuffer = inputBuffer + data
+            var outputConsumed = 0
+            // collect more bytes if we need
+            if (inputBuffer.size < 2) {
+                return
+            } else if (inputBuffer[0] == MessageType.READ.code) {
+                outputConsumed = processReadMessageReceived(inputBuffer)
+            } else if (inputBuffer[0] == MessageType.WRITE.code) {
+                outputConsumed = processWriteMessageReceived(inputBuffer)
+            } else {
+                // swallow a byte and try again?
+                outputConsumed = 1
+            }
+            if (outputConsumed > 0) {
+//                inputBuffer = inputBuffer.drop(outputConsumed).toByteArray()
+            }
+        }
+
+        override fun onUsbConnectionError(data: String) {
+            _usbStatus.value = UsbStatus.Error(data)
+            Log.e(TAG, "USB Connection Error: $data")
+        }
+
+        override fun onUsbReadError(e: IOException) {
+            _usbStatus.value = UsbStatus.Error("Read Error: ${e.message}")
+            _errorMessage.value = ErrorProcessingMessage(Error(e.message))
+            Log.e(TAG, "USB Read Error", e)
+        }
+
+        override fun onUsbWriteError(e: IOException) {
+            // This can update a specific write error state if needed,
+            // or just be logged. The sendData method's return provides immediate feedback.
+            Log.e(TAG, "USB Write Error", e)
+        }
+
+    }
+
     // Not every read is a complete message, so we need to store the received data up until this point
     private var inputBuffer: ByteArray = ByteArray(0);
 
@@ -40,7 +120,7 @@ class UsbDataMonitor(private val context: Context): UsbMonitor, UsbSerialService
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as UsbSerialService.UsbBinder
             usbSerialService = binder.getService()
-            usbSerialService.setListener(this@UsbDataMonitor)
+            usbSerialService.setListener(USBListener())
             isBound = true
             Log.d(TAG, "UsbSerialService connected via Monitor")
             _usbStatus.value = UsbStatus.ServiceBound
@@ -105,27 +185,9 @@ class UsbDataMonitor(private val context: Context): UsbMonitor, UsbSerialService
         return sendData(message.getBytes())
     }
 
-    override fun start() {
-        startMonitoring()
-    }
-
-    override fun stop() {
-        stopMonitoring()
-    }
-
-    override fun onUsbDeviceAttached(deviceName: String) {
-        _usbStatus.value = UsbStatus.Connected(deviceName)
-        Log.i(TAG, "USB Device Attached: $deviceName")
-    }
-
-    override fun onUsbDeviceDetached() {
-        _usbStatus.value = UsbStatus.Disconnected
-        Log.i(TAG, "USB Device Detached")
-    }
-
     private fun processReadMessageReceived(bytes: ByteArray): Int {
         if(bytes[1] == OPCODE_READ_FW_VERSION) {
-            val messageSize = GetFirmwareVersionResponse.MESSAGE_SIZE
+            val messageSize = GetFirmwareVersionResponse.Companion.MESSAGE_SIZE
             if (messageSize <= bytes.size) {
                 val receiveMessage = GetFirmwareVersionResponse(bytes)
                 _receivedMessage.value = receiveMessage
@@ -137,44 +199,6 @@ class UsbDataMonitor(private val context: Context): UsbMonitor, UsbSerialService
 
     private fun processWriteMessageReceived(bytes: ByteArray): Int {
         return 0
-    }
-
-
-    override fun onUsbDataReceived(data: ByteArray) {
-        // just append the data. work out what to do afterwards. we literally don't know how long the message is until we get these bytes
-        inputBuffer = inputBuffer + data
-        var outputConsumed = 0
-        // collect more bytes if we need
-        if (inputBuffer.size < 2) {
-            return
-        } else if (inputBuffer[0] == MessageType.READ.code) {
-            outputConsumed = processReadMessageReceived(inputBuffer)
-        } else if (inputBuffer[0] == MessageType.WRITE.code) {
-            outputConsumed = processWriteMessageReceived(inputBuffer)
-        } else {
-            // swallow a byte and try again?
-            outputConsumed = 1
-        }
-        if (outputConsumed > 0) {
-            inputBuffer = inputBuffer.drop(outputConsumed).toByteArray()
-        }
-    }
-
-    override fun onUsbConnectionError(message: String) {
-        _usbStatus.value = UsbStatus.Error(message)
-        Log.e(TAG, "USB Connection Error: $message")
-    }
-
-    override fun onUsbReadError(e: IOException) {
-        _usbStatus.value = UsbStatus.Error("Read Error: ${e.message}")
-        _errorMessage.value = ErrorProcessingMessage(Error(e.message))
-        Log.e(TAG, "USB Read Error", e)
-    }
-
-    override fun onUsbWriteError(e: IOException) {
-        // This can update a specific write error state if needed,
-        // or just be logged. The sendData method's return provides immediate feedback.
-        Log.e(TAG, "USB Write Error", e)
     }
 }
 

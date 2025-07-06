@@ -13,26 +13,54 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import com.example.bafflingvision.usbDataMonitor.toHexString
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
 import com.hoho.android.usbserial.util.SerialInputOutputManager
 import java.io.IOException
 import java.util.concurrent.Executors
 
+/**
+ *     BafflingDisplay android app
+ *
+ *     Copyright (C) 2025 Dave.J
+ *
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
+/**
+ * Background service for connecting to a USB COM port
+ *
+ * Handles explicitly opening the port and provides callbacks for
+ * receiving updates.
+ *
+ * DO NOT USE THIS SERVICE DIRECTLY ALWAYS USE UsbDataMonitor
+ */
 class UsbSerialService : Service() {
     private val binder = UsbBinder()
     private var usbManager: UsbManager? = null
     private var connectedPort: UsbSerialPort? = null
     private var serialInputOutputManager: SerialInputOutputManager? = null
     private val mainHandler = Handler(Looper.getMainLooper())
-
     private var listener: UsbSerialListener? = null
 
     interface UsbSerialListener {
         fun onUsbDeviceAttached(deviceName: String)
         fun onUsbDeviceDetached()
-        fun onUsbDataReceived(message: ByteArray)
-        fun onUsbConnectionError(message: String)
+        fun onUsbDataReceived(data: ByteArray)
+        fun onUsbConnectionError(data: String)
         fun onUsbReadError(e: IOException)
         fun onUsbWriteError(e: IOException)
     }
