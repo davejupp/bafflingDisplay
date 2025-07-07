@@ -1,4 +1,4 @@
-package com.example.bafflingvision
+package com.badsheepy.bafflingvision
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,8 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.bafflingvision.usbDataMonitor.UsbDataMonitor
-import com.example.bafflingvision.usbDataMonitor.UsbStatus
+import com.badsheepy.bafflingvision.usbDataMonitor.UsbStatus
 
 /**
  *     BafflingDisplay android app
@@ -53,15 +52,15 @@ fun UsbSerialScreen(
     onReadBasicDataRequest24: () -> Unit,
     onReadBasicDataRequest0a: () -> Unit,
     onReadBasicDataRequest20: () -> Unit,
-    onReadBasicDataRequest22: () -> Unit
+    onReadBasicDataRequest22: () -> Unit,
+    onStartPollingClick: () -> Unit
 ) {
     val statusText = when (usbStatus) {
         is UsbStatus.Connected -> "Connected to: ${usbStatus.deviceName}"
-        UsbStatus.Disconnected -> "Disconnected"
         is UsbStatus.Error -> "Error: ${usbStatus.message}"
+        UsbStatus.Disconnected -> "Disconnected"
         UsbStatus.ServiceBound -> "Service Bound (Ready to connect)"
         UsbStatus.ServiceUnbound -> "Service Unbound"
-        UsbDataMonitor -> "Erm I have no idea"
     }
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -84,6 +83,14 @@ fun UsbSerialScreen(
             ) {
                 Text("Connect/Find Device")
             }
+
+//            Button(
+//                onClick = onStartPollin,
+//                enabled = usbStatus is UsbStatus.ServiceBound || usbStatus is UsbStatus.Disconnected || usbStatus is UsbStatus.Error
+//            ) {
+//                Text("Start polling")
+//            }
+
             Button(onClick = onDisconnectClick, enabled = usbStatus is UsbStatus.Connected) {
                 Text("Disconnect")
             }
@@ -97,69 +104,77 @@ fun UsbSerialScreen(
             ) {
                 Text("Request Firmware Version")
             }
+//
+//            // Button for specific command
+//            Button(
+//                onClick = onSendSomeRequest,
+//                enabled = usbStatus is UsbStatus.Connected
+//            ) {
+//                Text("Request something or other")
+//            }
+//
+//            // Button for specific command
+//            Button(
+//                onClick = onReadBasicDataRequest08,
+//                enabled = usbStatus is UsbStatus.Connected
+//            ) {
+//                Text("Read 08")
+//            }
+//
+//            // Button for specific command
+//            Button(
+//                onClick = onReadBasicDataRequest0a,
+//                enabled = usbStatus is UsbStatus.Connected
+//            ) {
+//                Text("Read 0a")
+//            }
+//
+//            // Button for specific command
+//            Button(
+//                onClick = onReadBasicDataRequest11,
+//                enabled = usbStatus is UsbStatus.Connected
+//            ) {
+//                Text("Read 11")
+//            }
+//
+//            // Button for specific command
+//            Button(
+//                onClick = onReadBasicDataRequest20,
+//                enabled = usbStatus is UsbStatus.Connected
+//            ) {
+//                Text("Read 20")
+//            }
+//
+//            // Button for specific command
+//            Button(
+//                onClick = onReadBasicDataRequest22,
+//                enabled = usbStatus is UsbStatus.Connected
+//            ) {
+//                Text("Read 22")
+//            }
+//
+//            // Button for specific command
+//            Button(
+//                onClick = onReadBasicDataRequest24,
+//                enabled = usbStatus is UsbStatus.Connected
+//            ) {
+//                Text("Read 24")
+//            }
+//
+//            // Button for specific command
+//            Button(
+//                onClick = onReadBasicDataRequest08,
+//                enabled = usbStatus is UsbStatus.Connected
+//            ) {
+//                Text("ReadBasic Data request")
+//            }
 
             // Button for specific command
             Button(
-                onClick = onSendSomeRequest,
+                onClick = onStartPollingClick,
                 enabled = usbStatus is UsbStatus.Connected
             ) {
-                Text("Request something or other")
-            }
-
-            // Button for specific command
-            Button(
-                onClick = onReadBasicDataRequest08,
-                enabled = usbStatus is UsbStatus.Connected
-            ) {
-                Text("Read 08")
-            }
-
-            // Button for specific command
-            Button(
-                onClick = onReadBasicDataRequest0a,
-                enabled = usbStatus is UsbStatus.Connected
-            ) {
-                Text("Read 0a")
-            }
-
-            // Button for specific command
-            Button(
-                onClick = onReadBasicDataRequest11,
-                enabled = usbStatus is UsbStatus.Connected
-            ) {
-                Text("Read 11")
-            }
-
-            // Button for specific command
-            Button(
-                onClick = onReadBasicDataRequest20,
-                enabled = usbStatus is UsbStatus.Connected
-            ) {
-                Text("Read 20")
-            }
-
-            // Button for specific command
-            Button(
-                onClick = onReadBasicDataRequest22,
-                enabled = usbStatus is UsbStatus.Connected
-            ) {
-                Text("Read 22")
-            }
-
-            // Button for specific command
-            Button(
-                onClick = onReadBasicDataRequest24,
-                enabled = usbStatus is UsbStatus.Connected
-            ) {
-                Text("Read 24")
-            }
-
-            // Button for specific command
-            Button(
-                onClick = onReadBasicDataRequest08,
-                enabled = usbStatus is UsbStatus.Connected
-            ) {
-                Text("ReadBasic Data request")
+                Text("Start polling")
             }
 
             for (sentDataItem in sentData) {

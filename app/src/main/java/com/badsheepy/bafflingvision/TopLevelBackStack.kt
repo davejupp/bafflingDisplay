@@ -1,4 +1,4 @@
-package com.example.bafflingvision
+package com.badsheepy.bafflingvision
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf

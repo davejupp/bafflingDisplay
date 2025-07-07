@@ -1,4 +1,4 @@
-package com.example.bafflingvision
+package com.badsheepy.bafflingvision
 
 class MotorUiState(
     val isDeviceAttached: Boolean = false,

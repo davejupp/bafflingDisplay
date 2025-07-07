@@ -1,4 +1,4 @@
-package com.example.bafflingvision.ui.theme
+package com.badsheepy.bafflingvision.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme

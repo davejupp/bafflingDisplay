@@ -1,4 +1,4 @@
-package com.example.bafflingvision.ui.theme
+package com.badsheepy.bafflingvision.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

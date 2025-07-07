@@ -1,6 +1,6 @@
-package com.example.bafflingvision
+package com.badsheepy.bafflingvision
 
-import com.example.bafflingvision.usbDataMonitor.toHexString
+import com.badsheepy.bafflingvision.usbDataMonitor.toHexString
 
 /**
  *     BafflingDisplay android app
@@ -33,6 +33,7 @@ abstract class BaseUartReceiveMessage();
 abstract class BaseUartSendMessage();
 
 abstract class BafangReadMessage(code: Byte) : BafangMessage(MessageType.BAFANG_READ, code)
+
 abstract class BafangWriteMessage(val code: Byte) : BafangIMessage {
     override fun getType(): MessageType {
         return MessageType.BAFANG_WRITE
@@ -60,24 +61,24 @@ object BafangReadEventLogStatusMessage: BafangReadMessage(OSFW_READ) {
         return byteArrayOf(MessageType.BBSFW_READ.code, OPCODE_READ_EVTLOG_ENABLE, 0x3)
     }
 }
-
-object BafangEnableEventLogStatusMessage: BafangWriteMessage(OSFW_READ) {
-    override fun getBytes(): ByteArray {
-        return byteArrayOf(MessageType.BAFANG_WRITE.code, 0x2, 0x3)
-    }
-}
+//
+//object BafangEnableEventLogStatusMessage: BafangWriteMessage(OSFW_WRITE) {
+//    override fun getBytes(): ByteArray {
+//        return byteArrayOf(MessageType.BAFANG_WRITE.code, 0x2, 0x3)
+//    }
+//}
 
 object BafangMessage08Bafang: BafangReadMessage(0x08)
 object BafangMessage0ABafang: BafangReadMessage(0x0a)
 object BafangMessage11Bafang: BafangReadMessage(0x11)
-object BafangMessage20Bafang: BafangReadMessage(0x20)
+object BafangReadSpeedMessage: BafangReadMessage(0x20)
+class BafangReadSpeedMessageReceived(data: ByteArray): BafangReadMessage(0x20) {
+    val rangeExtensions = data[0]
+    val rawWheelSpeed = data[1]
+}
 object BafangMessage22Bafang: BafangReadMessage(0x22)
 
-object BafangMessage25Bafang: BafangReadMessage(MessageType.BAFANG_READ.code) {
-    override fun getBytes(): ByteArray {
-        return byteArrayOf(MessageType.BAFANG_READ.code, 0x0a)
-    }
-}
+object BafangDisplayCurrentMessage: BafangReadMessage(0x0a)
 
 abstract class ReceiveMessage(messageType: MessageType, code: Byte, val data: ByteArray): BafangMessage(messageType, code) {
     abstract fun getSize():  Int

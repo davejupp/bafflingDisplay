@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".UsbSerialService" android:exported="false" />
+        <service android:name="com.badsheepy.bafflingvision.usbDataMonitor.UsbSerialService" android:exported="false" />
     </application>
 
 </manifest>

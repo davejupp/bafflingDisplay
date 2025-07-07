@@ -1,8 +1,9 @@
-package com.example.bafflingvision
+package com.badsheepy.bafflingvision
 
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,11 +15,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
-import com.example.bafflingvision.AppScreens.Home
-import com.example.bafflingvision.AppScreens.None
-import com.example.bafflingvision.ui.theme.BafflingVisionTheme
-import com.example.bafflingvision.usbDataMonitor.UsbDataMonitor
-import com.example.bafflingvision.usbDataMonitor.UsbStatus
+import com.badsheepy.bafflingvision.AppScreens.Home
+import com.badsheepy.bafflingvision.AppScreens.None
+import com.badsheepy.bafflingvision.ui.theme.BafflingVisionTheme
+import com.badsheepy.bafflingvision.usbDataMonitor.SerialToDisplayMessageConvertor
+import com.badsheepy.bafflingvision.usbDataMonitor.SerialToDisplayMessageConvertorInterface
+import com.badsheepy.bafflingvision.usbDataMonitor.UsbStatus
 import kotlinx.coroutines.launch
 /**
  *     BafflingDisplay android app
@@ -42,7 +44,7 @@ import kotlinx.coroutines.launch
 
 class MainNavigationActivity : ComponentActivity() {
 
-    private lateinit var usbDataMonitor: UsbDataMonitor
+    private lateinit var messageSource: SerialToDisplayMessageConvertorInterface
 
     private val usbStatusUi = mutableStateOf<UsbStatus>(UsbStatus.ServiceUnbound)
     private val sentDataUi = mutableStateOf<List<BafangMessage>>(emptyList())
@@ -51,12 +53,13 @@ class MainNavigationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        usbDataMonitor = UsbDataMonitor(applicationContext)
+        messageSource = SerialToDisplayMessageConvertor(applicationContext)
 
         // Collect flows from UsbDataMonitor to update UI state
         lifecycleScope.launch {
-            usbDataMonitor.usbStatus.collect { status ->
+            messageSource.usbStatus.collect { status ->
                 Log.d("MainActivity", "Monitor Status Updated: $status")
                 usbStatusUi.value = status
 
@@ -72,16 +75,10 @@ class MainNavigationActivity : ComponentActivity() {
         }
 
         lifecycleScope.launch {
-            usbDataMonitor.receivedMessage.collect { data ->
+            messageSource.receivedMessage.collect { data ->
                 data.let {
                     Log.d("MainActivity", "Monitor Received Data UI Update: $data")
                 }
-            }
-        }
-
-        lifecycleScope.launch {
-            usbDataMonitor.sentMessage.collect { logEntry ->
-                Log.d("MainActivity", "Monitor Sent Data UI Update: $logEntry")
             }
         }
 
@@ -94,13 +91,13 @@ class MainNavigationActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        usbDataMonitor.startMonitoring()
+        messageSource.startMonitoring()
         Log.d("MainActivity", "UsbDataMonitor.startMonitoring() called")
     }
 
     override fun onStop() {
         super.onStop()
-        usbDataMonitor.stopMonitoring()
+        messageSource.stopMonitoring()
         Log.d("MainActivity", "UsbDataMonitor.stopMonitoring() called")
     }
 
@@ -140,33 +137,35 @@ class MainNavigationActivity : ComponentActivity() {
                                 usbStatus = usbStatusUi.value, // Pass the UsbStatus sealed class instance
                                 sentData = sentDataUi.value,
                                 messageReceived = messageReceivedUi.value,
-                                onConnectClick = { usbDataMonitor.findAndConnectDevice() },
-                                onDisconnectClick = { usbDataMonitor.disconnectDevice() },
+                                onConnectClick = { messageSource.findAndConnectDevice() },
+                                onDisconnectClick = { messageSource.disconnectDevice() },
                                 onSendFirmwareVersionRequest = {
-                                    usbDataMonitor.sendReadRequest(BafangReadFirmwareVersionMessage) // ReadFirmwareVersionMessage)
+                                    messageSource.sendReadRequest(BafangReadFirmwareVersionMessage) // ReadFirmwareVersionMessage)
                                 },
                                 onSendSomeRequest = {
-                                    usbDataMonitor.sendReadRequest(BafangReadSomethingVersionMessage) // ReadFirmwareVersionMessage)
+                                    messageSource.sendReadRequest(BafangReadEventLogStatusMessage) // ReadFirmwareVersionMessage)
                                 },
                                 onReadBasicDataRequest08 = {
-                                    usbDataMonitor.sendReadRequest(BafangMessage08Bafang)
+                                    messageSource.sendReadRequest(BafangMessage08Bafang)
                                 },
                                 onReadBasicDataRequest11 = {
-                                    usbDataMonitor.sendReadRequest(BafangMessage11Bafang)
+                                    messageSource.sendReadRequest(BafangMessage11Bafang)
                                 },
                                 onReadBasicDataRequest24 = {
-                                    usbDataMonitor.sendReadRequest(BafangMessage25Bafang)
+                                    messageSource.sendReadRequest(BafangDisplayCurrentMessage)
                                 },
                                 onReadBasicDataRequest0a = {
-                                    usbDataMonitor.sendReadRequest(BafangMessage0ABafang)
+                                    messageSource.sendReadRequest(BafangMessage0ABafang)
                                 },
                                 onReadBasicDataRequest20 = {
-                                    usbDataMonitor.sendReadRequest(BafangMessage20Bafang)
+                                    messageSource.sendReadRequest(BafangReadSpeedMessage)
                                 },
                                 onReadBasicDataRequest22 = {
-                                    usbDataMonitor.sendReadRequest(BafangMessage22Bafang)
+                                    messageSource.sendReadRequest(BafangMessage22Bafang)
                                 },
-
+                                onStartPollingClick = {
+                                    messageSource.startPollingWithRequests()
+                                }
                             )
                         }
 

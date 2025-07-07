@@ -1,7 +1,7 @@
-package com.example.bafflingvision.usbDataMonitor
+package com.badsheepy.bafflingvision.usbDataMonitor
 
-import com.example.bafflingvision.BafangMessage
-import com.example.bafflingvision.BafangReadMessage
+import com.badsheepy.bafflingvision.BafangMessage
+import com.badsheepy.bafflingvision.BafangReadMessage
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -35,7 +35,7 @@ sealed class UsbStatus {
 /**
  * Interface representing a class that translates between uart serial data and bafang messages
  */
-interface UsbMonitor {
+interface SerialToDisplayMessageConvertorInterface {
     /**
      * A flow emitting the current status of the USB connection.
      */
@@ -46,11 +46,6 @@ interface UsbMonitor {
      * Null if no message is ready or an error occurred during parsing.
      */
     val receivedMessage: StateFlow<BafangMessage>
-
-    /**
-     * A flow emitting a log of data sending attempts and their results.
-     */
-    val sentMessage: StateFlow<BafangMessage>
 
     /**
      * A flow emitting a log of data sending attempts and their results.
@@ -71,10 +66,25 @@ interface UsbMonitor {
 
     /**
      * Sends a read request message to the connected device.
-     * @param message The [com.example.bafflingvision.BafangReadMessage] to send.
+     * @param message The [com.badsheepy.bafflingvision.BafangReadMessage] to send.
      * @return true if the data was successfully passed to the service for sending, false otherwise.
      *         Note: Successful return here does not guarantee the device received or processed it.
      *         Observe [sentDataLog] and [receivedMessage] for more details.
      */
     fun sendReadRequest(message: BafangReadMessage): Boolean
+
+    /**
+     * Starts monitoring the USB device for incoming data.
+     */
+    fun startMonitoring();
+
+    /**
+     * Stops monitoring the USB device for incoming data.
+     */
+    fun stopMonitoring();
+
+    /**
+     * Starts actively asking the display for responses
+     */
+    fun startPollingWithRequests(): Boolean
 }

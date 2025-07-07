@@ -1,4 +1,4 @@
-package com.example.bafflingvision
+package com.badsheepy.bafflingvision.usbDataMonitor
 
 import android.app.PendingIntent
 import android.app.Service
@@ -13,7 +13,6 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
-import com.example.bafflingvision.usbDataMonitor.toHexString
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
 import com.hoho.android.usbserial.util.SerialInputOutputManager
@@ -41,14 +40,14 @@ import java.util.concurrent.Executors
  */
 
 /**
- * Background service for connecting to a USB COM port
+ * Background service for connecting to a USB COM port for serial communication
  *
- * Handles explicitly opening the port and provides callbacks for
- * receiving updates.
+ * Handles explicitly opening the port, setting communication parameters and provides callbacks for
+ * receiving updates as well as methods to send data. However,
  *
  * DO NOT USE THIS SERVICE DIRECTLY ALWAYS USE UsbDataMonitor
  */
-class UsbSerialService : Service() {
+internal class UsbSerialService : Service() {
     private val binder = UsbBinder()
     private var usbManager: UsbManager? = null
     private var connectedPort: UsbSerialPort? = null

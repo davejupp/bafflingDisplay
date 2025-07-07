@@ -1,12 +1,12 @@
-package com.example.bafflingvision // Or your common navigation package
+package com.badsheepy.bafflingvision // Or your common navigation package
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.example.bafflingvision.AppScreens.Home
-import com.example.bafflingvision.AppScreens.Settings
+import com.badsheepy.bafflingvision.AppScreens.Home
+import com.badsheepy.bafflingvision.AppScreens.Settings
 /**
  *     BafflingDisplay android app
  *

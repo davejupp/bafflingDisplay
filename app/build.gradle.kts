@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.bafflingvision"
+    namespace = "com.badsheepy.bafflingvision"
     compileSdk = 36
 
     defaultConfig {

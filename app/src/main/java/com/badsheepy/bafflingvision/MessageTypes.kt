@@ -1,4 +1,4 @@
-package com.example.bafflingvision
+package com.badsheepy.bafflingvision
 
 enum class MessageType(val code: Byte) {
     BAFANG_READ(0x11),

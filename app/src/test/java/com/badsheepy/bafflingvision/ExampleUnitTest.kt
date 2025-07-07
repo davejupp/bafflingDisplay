@@ -1,6 +1,6 @@
-package com.example.bafflingvision
+package com.badsheepy.bafflingvision
 
-import com.example.bafflingvision.NoOpBafangMessage.computeChecksum
+import com.badsheepy.bafflingvision.NoOpBafangMessage.computeChecksum
 import org.junit.Test
 
 import org.junit.Assert.*
